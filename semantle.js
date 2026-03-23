@@ -27,7 +27,7 @@ export async function checkWord(wordToCheck) {
 
     let result;
     try {
-        result = JSON.parse(rawText);
+        result = JSON.parse(rawText)[0];
     } catch {
         throw new Error('Semantle API returned invalid JSON.');
     }

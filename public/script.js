@@ -55,7 +55,7 @@ function renderResults(config, results) {
     const rows = sortedResults
         .map((item) => {
             const distanceCell = config.isDistanceShown
-                ? `<td>${escapeHtml(item.distance ?? '')}</td>`
+                ? `<td>${escapeHtml(item.distance === -1 ? 'far' : item.distance)}</td>`
                 : '';
 
             return `
