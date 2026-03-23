@@ -21,14 +21,18 @@ const wordsNumHelpEl = document.getElementById('wordsNum-help');
 const simMinHelpEl = document.getElementById('simMinLimit-help');
 const simMaxHelpEl = document.getElementById('simMaxLimit-help');
 
+const exportBtn = document.getElementById('export-btn');
+
 let appConfig = null;
 let shouldAbort = false;
 let isChecking = false;
+let latestResults = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
     buildProgressBar();
     updateProgressBar(0);
     await initializeApp();
+    exportBtn.disabled = true;
 });
 
 function setFormDisabled(disabled) {
@@ -41,6 +45,7 @@ function setFormDisabled(disabled) {
     submitBtn.disabled = disabled;
     abortBtn.disabled = !disabled;
     resetBtn.disabled = disabled;
+    exportBtn.disabled = disabled;
 
     submitBtn.textContent = disabled ? 'Checking...' : 'Check words';
 
@@ -49,7 +54,7 @@ function setFormDisabled(disabled) {
 
 function setStatus(message, isError = false) {
     statusEl.textContent = message;
-    statusEl.className = isError ? 'status error' : 'status';
+    statusEl.className = isError ? 'status status-error' : 'status';
 }
 
 function escapeHtml(value) {
@@ -66,6 +71,8 @@ function sleep(ms) {
 }
 
 function renderResults(config, results) {
+    latestResults = [...results];
+
     const sortedResults = [...results].sort((a, b) => b.similarity - a.similarity);
 
     if (!sortedResults.length) {
@@ -165,6 +172,70 @@ function getPayloadFromForm() {
         isDistanceShown: true,
         requestDelayMs: Number(appConfig?.requestDelayMs || 0)
     };
+}
+
+function formatResultsAsText(results) {
+    const sortedResults = [...results].sort((a, b) => b.similarity - a.similarity);
+
+    if (!sortedResults.length) {
+        return 'No words were found with these settings.';
+    }
+
+    const lines = sortedResults.map((item) => {
+        const parts = [
+            item.word,
+            `similarity: ${item.similarity}`
+        ];
+
+        parts.push(`distance: ${item.distance === -1 ? 'far' : item.distance}`);
+
+        return parts.join(', ');
+    });
+
+    return lines.join('\n');
+}
+
+function isMobileDevice() {
+    return window.matchMedia('(max-width: 768px)').matches || navigator.maxTouchPoints > 0;
+}
+
+async function exportResults(results) {
+    const text = formatResultsAsText( results);
+
+    if (!text) {
+        setStatus('There are no results to export.', true);
+        return;
+    }
+
+    try {
+        if (isMobileDevice() && navigator.share) {
+            await navigator.share({
+                text
+            });
+            setStatus('Results shared.');
+            return;
+        }
+
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            setStatus('Results copied to clipboard.');
+            return;
+        }
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        setStatus('Results copied to clipboard.');
+    } catch (error) {
+        setStatus('Failed to export results.', true);
+    }
 }
 
 form.addEventListener('submit', async (event) => {
@@ -286,6 +357,15 @@ resetBtn.addEventListener('click', () => {
     setStatus('Settings were reset to default values.');
     resultsSection.classList.add('hidden');
     resultTableWrapEl.innerHTML = '';
+});
+
+exportBtn.addEventListener('click', async () => {
+    if (!latestResults.length) {
+        setStatus('There are no results to export.', true);
+        return;
+    }
+
+    await exportResults(latestResults);
 });
 
 function buildProgressBar() {

@@ -135,6 +135,30 @@ button:disabled {
     background: rgba(255, 255, 255, 0.06);
 }
 
+.link-button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    box-shadow: none;
+}
+
+.link-button:hover:not(:disabled) {
+    color: var(--accent-hover);
+    background: transparent;
+    transform: none;
+}
+
+.link-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
 .status-wrap,
 .results {
     margin-top: 20px;
@@ -213,6 +237,10 @@ button:disabled {
 
 .results-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.04);
+}
+
+.status-error {
+    color: var(--danger);
 }
 
 .error {
