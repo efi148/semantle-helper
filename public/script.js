@@ -4,6 +4,7 @@ const resultsSection = document.getElementById('results');
 const resultTableWrapEl = document.getElementById('result-table-wrap');
 const submitBtn = document.getElementById('submit-btn');
 const progressBarEl = document.getElementById('progress-bar');
+const progressFillEl = document.getElementById('progress-fill');
 
 window.addEventListener('DOMContentLoaded', async () => {
     buildProgressBar();
@@ -131,7 +132,9 @@ form.addEventListener('submit', async (event) => {
         const wordsData = await wordsResponse.json();
 
         if (!wordsResponse.ok) {
-            throw new Error(wordsData.error || 'Failed to prepare words list.');
+            setStatus(wordsData.error || 'Failed to prepare words list.', true);
+            setFormDisabled(false);
+            return;
         }
 
         const {config, words, totalWords} = wordsData;
@@ -156,7 +159,9 @@ form.addEventListener('submit', async (event) => {
             const checkData = await checkResponse.json();
 
             if (!checkResponse.ok) {
-                throw new Error(checkData.error || `Failed while checking "${word}".`);
+                setStatus(checkData.error || `Failed while checking "${word}".`, true);
+                setFormDisabled(false);
+                return;
             }
 
             if (
@@ -184,28 +189,18 @@ form.addEventListener('submit', async (event) => {
 });
 
 function buildProgressBar() {
-    if (!progressBarEl) {
+    if (!progressFillEl) {
         return;
     }
 
-    progressBarEl.innerHTML = '';
-
-    for (let i = 0; i < 100; i += 1) {
-        const cell = document.createElement('div');
-        cell.className = 'progress-cell';
-        progressBarEl.appendChild(cell);
-    }
+    progressFillEl.style.width = '0%';
 }
 
 function updateProgressBar(percent) {
-    if (!progressBarEl) {
+    if (!progressFillEl) {
         return;
     }
 
-    const cells = progressBarEl.children;
-    const activeCells = Math.max(0, Math.min(100, percent));
-
-    for (let i = 0; i < cells.length; i += 1) {
-        cells[i].classList.toggle('active', i < activeCells);
-    }
+    const safePercent = Math.max(0, Math.min(100, percent));
+    progressFillEl.style.width = `${safePercent}%`;
 }
