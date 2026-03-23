@@ -1,23 +1,20 @@
 {
-  "name": "nice-bot",
+  "name": "semantle-helper",
   "version": "1.0.0",
-  "description": "the first bot on 'Telegraf'",
+  "description": "Web interface for checking Semantle Hebrew helper words",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
   "author": "Efi",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.4",
-    "dotenv": "^8.6.0",
-    "express": "^4.17.1",
-    "lodash": "^4.17.21",
+    "dotenv": "^17.3.1",
+    "express": "^4.21.2",
+    "lodash": "^4.17.23",
     "most-common-words-by-language": "^3.0.9",
-    "node-fetch": "^3.2.3",
-    "rxjs": "^7.5.5",
-    "telegraf": "^3.38.0"
+    "node-fetch": "^3.3.2"
   }
 }
