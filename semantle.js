@@ -7,7 +7,9 @@ export const SEMANTLE_API_URL =
 
 export function getWords(wordsNum = 1000) {
     const safeWordsNum = Math.min(Math.max(Number(wordsNum) || 1000, 1), 10000);
-    return getWordsList(LANG, safeWordsNum);
+
+    return getWordsList(LANG, safeWordsNum)
+        .filter((word) => typeof word === 'string' && word.trim().length >= 2);
 }
 
 export async function checkWord(wordToCheck) {
