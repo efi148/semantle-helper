@@ -72,7 +72,9 @@ app.post('/api/check-word', async (req, res) => {
         const word = String(req.body.word || '').trim();
 
         if (!word) {
-            throw new Error('Word is required.');
+            return res.status(400).json({
+                error: 'Word is required.'
+            });
         }
 
         const result = await checkWord(word);
