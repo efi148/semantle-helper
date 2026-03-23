@@ -11,6 +11,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     await loadDefaults();
 });
 
+function setFormDisabled(disabled) {
+    const inputs = form.querySelectorAll('input');
+
+    inputs.forEach((el) => {
+        el.disabled = disabled;
+    });
+
+    submitBtn.disabled = disabled;
+    submitBtn.textContent = disabled ? 'Checking...' : 'Check words';
+
+    form.classList.toggle('form-disabled', disabled);
+}
+
 function setStatus(message, isError = false) {
     statusEl.textContent = message;
     statusEl.className = isError ? 'status error' : 'status';
@@ -100,7 +113,7 @@ form.addEventListener('submit', async (event) => {
         return;
     }
 
-    submitBtn.disabled = true;
+    setFormDisabled(true);
     resultsSection.classList.remove('hidden');
     resultTableWrapEl.innerHTML = '<div class="result-item">No matching words yet.</div>';
     updateProgressBar(0);
@@ -166,7 +179,7 @@ form.addEventListener('submit', async (event) => {
     } catch (error) {
         setStatus(error.message || 'Something went wrong.', true);
     } finally {
-        submitBtn.disabled = false;
+        setFormDisabled(false);
     }
 });
 

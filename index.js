@@ -6,7 +6,6 @@ import 'dotenv/config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
-const HOST = 'localhost';
 
 const defaultConfig = {
     wordsNum: Number(process.env.COUNT_WORDS) || 1000,
@@ -93,6 +92,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, HOST, () => {
-    console.log(`semantle-helper is running on http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Running on http://localhost:${PORT}`);
 });

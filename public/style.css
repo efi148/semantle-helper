@@ -87,6 +87,73 @@ small {
     padding-top: 30px;
 }
 
+.toggle-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 52px;
+}
+
+.toggle-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.toggle-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle-slider {
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    position: relative;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.2s ease;
+}
+
+.toggle-input:checked + .toggle-slider {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.toggle-input:checked + .toggle-slider::after {
+    transform: translateX(24px);
+}
+
+.toggle-input:focus-visible + .toggle-slider {
+    outline: 2px solid rgba(34, 197, 94, 0.35);
+    outline-offset: 2px;
+}
+
+.form-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.form-disabled button {
+    pointer-events: auto;
+}
+
 .actions {
     margin-top: 20px;
 }
@@ -102,7 +169,7 @@ button {
     color: white;
 }
 
-button:hover {
+button:hover&:not(:disabled) {
     background: var(--accent-hover);
 }
 

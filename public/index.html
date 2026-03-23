@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>semantle-helper</title>
     <link rel="stylesheet" href="/style.css"/>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 </head>
 <body>
 <main class="page">
@@ -40,9 +41,12 @@
                     <small>Recommended: 800</small>
                 </label>
 
-                <label class="checkbox">
-                    <input type="checkbox" id="isDistanceShown" name="isDistanceShown"/>
+                <label class="toggle-field" for="isDistanceShown">
                     <span>Show distance</span>
+                    <span class="toggle-wrap">
+                        <input type="checkbox" id="isDistanceShown" name="isDistanceShown" class="toggle-input"/>
+                        <span class="toggle-slider"></span>
+                    </span>
                 </label>
             </div>
 
