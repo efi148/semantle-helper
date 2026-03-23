@@ -31,22 +31,11 @@ export async function checkWord(wordToCheck) {
     } catch {
         throw new Error('Semantle API returned invalid JSON.');
     }
-    //
-    const similarity = [10, 20, 30, 40, 50, 60, 70, 80, 90, 99, -12, 15, 25, 55, 45, 65, 75, 53, 51, 64, 91, 33];
-    const distance = [999, 998, 12, 45, 78, 98, 65, 32, 36, 52, 158, 478, 492, 222, 321, 654, 789, 432, 123, 345, 567, 890, 123];
-
-    function getRandomValue(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    const randomSimilarity = getRandomValue(similarity);
-    const randomDistance = getRandomValue(distance);
-    //
 
     return {
         word: wordToCheck,
-        similarity: randomSimilarity,// result.similarity,
-        distance: randomDistance// result.distance
+        similarity: result.similarity,
+        distance: result.distance
     };
 }
 
