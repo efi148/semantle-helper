@@ -20,38 +20,26 @@
                 <label>
                     <span>Words to check</span>
                     <input type="number" id="wordsNum" name="wordsNum" min="1" max="10000" required/>
-                    <small>Recommended: 1500</small>
+                    <small id="wordsNum-help"></small>
                 </label>
 
                 <label>
                     <span>Minimum similarity</span>
                     <input type="number" id="simMinLimit" name="simMinLimit" min="1" max="99" required/>
-                    <small>Recommended: 40</small>
+                    <small id="simMinLimit-help"></small>
                 </label>
 
                 <label>
                     <span>Maximum similarity</span>
                     <input type="number" id="simMaxLimit" name="simMaxLimit" min="2" max="100" required/>
-                    <small>Recommended: 60</small>
-                </label>
-
-                <label>
-                    <span>Delay between requests (ms)</span>
-                    <input type="number" id="requestDelayMs" name="requestDelayMs" min="0" max="10000" required/>
-                    <small>Recommended: 800</small>
-                </label>
-
-                <label class="toggle-field" for="isDistanceShown">
-                    <span>Show distance</span>
-                    <span class="toggle-wrap">
-                        <input type="checkbox" id="isDistanceShown" name="isDistanceShown" class="toggle-input"/>
-                        <span class="toggle-slider"></span>
-                    </span>
+                    <small id="simMaxLimit-help"></small>
                 </label>
             </div>
 
             <div class="actions">
-                <button type="submit" id="submit-btn">Check words</button>
+                <button type="submit" id="submit-btn" class="primary-btn">Check words</button>
+                <button type="button" id="abort-btn" class="error" disabled>Abort</button>
+                <button type="button" id="reset-btn" class="secondary">Reset</button>
             </div>
         </form>
 

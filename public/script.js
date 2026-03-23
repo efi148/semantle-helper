@@ -1,15 +1,34 @@
+const STORAGE_KEYS = {
+    COUNT_WORDS: 'COUNT_WORDS',
+    SIM_MIN: 'SIM_MIN',
+    SIM_MAX: 'SIM_MAX'
+};
+
 const form = document.getElementById('checker-form');
 const statusEl = document.getElementById('status');
 const resultsSection = document.getElementById('results');
 const resultTableWrapEl = document.getElementById('result-table-wrap');
 const submitBtn = document.getElementById('submit-btn');
-const progressBarEl = document.getElementById('progress-bar');
+const abortBtn = document.getElementById('abort-btn');
+const resetBtn = document.getElementById('reset-btn');
 const progressFillEl = document.getElementById('progress-fill');
+
+const wordsNumInput = document.getElementById('wordsNum');
+const simMinInput = document.getElementById('simMinLimit');
+const simMaxInput = document.getElementById('simMaxLimit');
+
+const wordsNumHelpEl = document.getElementById('wordsNum-help');
+const simMinHelpEl = document.getElementById('simMinLimit-help');
+const simMaxHelpEl = document.getElementById('simMaxLimit-help');
+
+let appConfig = null;
+let shouldAbort = false;
+let isChecking = false;
 
 window.addEventListener('DOMContentLoaded', async () => {
     buildProgressBar();
     updateProgressBar(0);
-    await loadDefaults();
+    await initializeApp();
 });
 
 function setFormDisabled(disabled) {
@@ -20,6 +39,9 @@ function setFormDisabled(disabled) {
     });
 
     submitBtn.disabled = disabled;
+    abortBtn.disabled = !disabled;
+    resetBtn.disabled = disabled;
+
     submitBtn.textContent = disabled ? 'Checking...' : 'Check words';
 
     form.classList.toggle('form-disabled', disabled);
@@ -87,33 +109,78 @@ function renderResults(config, results) {
     resultsSection.classList.remove('hidden');
 }
 
-async function loadDefaults() {
+async function initializeApp() {
     const response = await fetch('/api/config');
     const defaults = await response.json();
 
-    document.getElementById('wordsNum').value = defaults.wordsNum;
-    document.getElementById('simMinLimit').value = defaults.simMinLimit;
-    document.getElementById('simMaxLimit').value = defaults.simMaxLimit;
-    document.getElementById('isDistanceShown').checked = defaults.isDistanceShown;
-    document.getElementById('requestDelayMs').value = defaults.requestDelayMs;
+    appConfig = {
+        ...defaults,
+        isDistanceShown: true
+    };
+
+    applyHelpText(appConfig);
+    loadSettingsIntoForm(appConfig);
+}
+
+function applyHelpText(config) {
+    wordsNumHelpEl.textContent = `Default: ${config.wordsNum}`;
+    simMinHelpEl.textContent = `Default: ${config.simMinLimit}`;
+    simMaxHelpEl.textContent = `Default: ${config.simMaxLimit}`;
+}
+
+function getStoredNumber(key) {
+    const rawValue = localStorage.getItem(key);
+
+    if (rawValue == null || rawValue === '') {
+        return null;
+    }
+
+    const parsed = Number(rawValue);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function loadSettingsIntoForm(config) {
+    wordsNumInput.value = getStoredNumber(STORAGE_KEYS.COUNT_WORDS) ?? config.wordsNum;
+    simMinInput.value = getStoredNumber(STORAGE_KEYS.SIM_MIN) ?? config.simMinLimit;
+    simMaxInput.value = getStoredNumber(STORAGE_KEYS.SIM_MAX) ?? config.simMaxLimit;
+}
+
+function persistSettings(payload) {
+    localStorage.setItem(STORAGE_KEYS.COUNT_WORDS, String(payload.wordsNum));
+    localStorage.setItem(STORAGE_KEYS.SIM_MIN, String(payload.simMinLimit));
+    localStorage.setItem(STORAGE_KEYS.SIM_MAX, String(payload.simMaxLimit));
+}
+
+function clearStoredSettings() {
+    localStorage.removeItem(STORAGE_KEYS.COUNT_WORDS);
+    localStorage.removeItem(STORAGE_KEYS.SIM_MIN);
+    localStorage.removeItem(STORAGE_KEYS.SIM_MAX);
+}
+
+function getPayloadFromForm() {
+    return {
+        wordsNum: Number(wordsNumInput.value),
+        simMinLimit: Number(simMinInput.value),
+        simMaxLimit: Number(simMaxInput.value),
+        isDistanceShown: true,
+        requestDelayMs: Number(appConfig?.requestDelayMs || 0)
+    };
 }
 
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const payload = {
-        wordsNum: Number(document.getElementById('wordsNum').value),
-        simMinLimit: Number(document.getElementById('simMinLimit').value),
-        simMaxLimit: Number(document.getElementById('simMaxLimit').value),
-        isDistanceShown: document.getElementById('isDistanceShown').checked,
-        requestDelayMs: Number(document.getElementById('requestDelayMs').value)
-    };
+    const payload = getPayloadFromForm();
 
     if (payload.simMaxLimit <= payload.simMinLimit) {
         setStatus('Maximum similarity must be greater than minimum similarity.', true);
         return;
     }
 
+    persistSettings(payload);
+
+    shouldAbort = false;
+    isChecking = true;
     setFormDisabled(true);
     resultsSection.classList.remove('hidden');
     resultTableWrapEl.innerHTML = '<div class="result-item">No matching words yet.</div>';
@@ -133,14 +200,24 @@ form.addEventListener('submit', async (event) => {
 
         if (!wordsResponse.ok) {
             setStatus(wordsData.error || 'Failed to prepare words list.', true);
-            setFormDisabled(false);
             return;
         }
 
         const {config, words, totalWords} = wordsData;
+        const normalizedConfig = {
+            ...config,
+            isDistanceShown: true
+        };
         const results = [];
 
         for (let i = 0; i < words.length; i += 1) {
+            if (shouldAbort) {
+                setStatus(`Aborted. Checked ${i} of ${totalWords} words.`);
+                renderResults(normalizedConfig, results);
+                updateProgressBar(totalWords ? Math.round((i / totalWords) * 100) : 0);
+                return;
+            }
+
             const word = words[i];
             const current = i + 1;
             const percent = Math.round((current / totalWords) * 100);
@@ -160,32 +237,55 @@ form.addEventListener('submit', async (event) => {
 
             if (!checkResponse.ok) {
                 setStatus(checkData.error || `Failed while checking "${word}".`, true);
-                setFormDisabled(false);
                 return;
             }
 
             if (
                 checkData.similarity != null &&
-                checkData.similarity > config.simMinLimit &&
-                checkData.similarity < config.simMaxLimit
+                checkData.similarity > normalizedConfig.simMinLimit &&
+                checkData.similarity < normalizedConfig.simMaxLimit
             ) {
                 results.push(checkData);
-                renderResults(config, results);
+                renderResults(normalizedConfig, results);
             }
 
-            if (current < totalWords && config.requestDelayMs > 0) {
-                await sleep(config.requestDelayMs);
+            if (!shouldAbort && current < totalWords && normalizedConfig.requestDelayMs > 0) {
+                await sleep(normalizedConfig.requestDelayMs);
             }
         }
 
-        renderResults(config, results);
+        renderResults(normalizedConfig, results);
         updateProgressBar(100);
-        setStatus(`Done. Checked ${totalWords} words. and found ${results.length} matching words.`);
+        setStatus(`Done. Checked ${totalWords} words and found ${results.length} matching words.`);
     } catch (error) {
         setStatus(error.message || 'Something went wrong.', true);
     } finally {
+        isChecking = false;
         setFormDisabled(false);
     }
+});
+
+abortBtn.addEventListener('click', () => {
+    if (!isChecking) {
+        return;
+    }
+
+    shouldAbort = true;
+    abortBtn.disabled = true;
+    setStatus('Abort requested...');
+});
+
+resetBtn.addEventListener('click', () => {
+    if (!appConfig || isChecking) {
+        return;
+    }
+
+    clearStoredSettings();
+    loadSettingsIntoForm(appConfig);
+    updateProgressBar(0);
+    setStatus('Settings were reset to default values.');
+    resultsSection.classList.add('hidden');
+    resultTableWrapEl.innerHTML = '';
 });
 
 function buildProgressBar() {

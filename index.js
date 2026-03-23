@@ -11,7 +11,7 @@ const defaultConfig = {
     wordsNum: Number(process.env.COUNT_WORDS) || 1000,
     simMinLimit: Number(process.env.SIM_MIN) || 40,
     simMaxLimit: Number(process.env.SIM_MAX) || 60,
-    isDistanceShown: process.env.SHOW_DISTANCE === 'true',
+    isDistanceShown: true,
     requestDelayMs: Number(process.env.REQUEST_DELAY_MS) || 800
 };
 
@@ -22,10 +22,7 @@ function normalizeConfig(input = {}) {
         Math.max(Number(input.simMaxLimit) || defaultConfig.simMaxLimit, simMinLimit + 1),
         100
     );
-    const isDistanceShown =
-        typeof input.isDistanceShown === 'boolean'
-            ? input.isDistanceShown
-            : defaultConfig.isDistanceShown;
+    const isDistanceShown = defaultConfig.isDistanceShown;
 
     const requestDelayMs = Math.max(
         Number(input.requestDelayMs) || defaultConfig.requestDelayMs,
@@ -58,7 +55,6 @@ app.post('/api/words-list', (req, res) => {
     try {
         const config = normalizeConfig(req.body);
         const words = getWords(config.wordsNum);
-
         res.json({
             config,
             totalWords: words.length,

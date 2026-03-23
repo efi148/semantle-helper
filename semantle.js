@@ -7,9 +7,18 @@ export const SEMANTLE_API_URL =
 
 export function getWords(wordsNum = 1000) {
     const safeWordsNum = Math.min(Math.max(Number(wordsNum) || 1000, 1), 10000);
+    const hebrewLettersOnlyRegex = /^[א-ת]+$/;
 
     return getWordsList(LANG, safeWordsNum)
-        .filter((word) => typeof word === 'string' && word.trim().length >= 2);
+        .filter((word) => {
+            if (typeof word !== 'string') {
+                return false;
+            }
+
+            const normalizedWord = word.trim();
+
+            return normalizedWord.length >= 2 && hebrewLettersOnlyRegex.test(normalizedWord);
+        });
 }
 
 export async function checkWord(wordToCheck) {
